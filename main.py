@@ -46,7 +46,7 @@ components.html(
       function update(dt) {
         const factor = Math.min(dt / 16.67, 2);
         if (upPressed) movePaddle(player, -player.speed * factor); if (downPressed) movePaddle(player, player.speed * factor);
-        movePaddle(cpu, Math.max(-cpu.speed * factor, Math.min(cpu.speed * factor, ball.y - ball.h / 2 - cpu.y)));
+        movePaddle(cpu, Math.max(-cpu.speed * factor, Math.min(cpu.speed * factor, ball.y - cpu.h / 2 - cpu.y)));
         ball.x += ball.vx * factor; ball.y += ball.vy * factor;
         if (ball.y - ball.r < 0 || ball.y + ball.r > H) { ball.vy *= -1; ball.y = Math.max(ball.r, Math.min(H - ball.r, ball.y)); }
         if (hit(player) && ball.vx < 0) { ball.vx = Math.abs(ball.vx) * 1.04; ball.vy += (ball.y - (player.y + player.h / 2)) * .08; }
