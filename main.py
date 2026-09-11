@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Retro Pong", page_icon="🏓", layout="centered")
 st.title("🏓 Retro Pong")
 st.caption("A tiny arcade classic — move your paddle and beat the computer.")
+st.balloons()
 
 components.html(
     """
