@@ -31,13 +31,13 @@ components.html(
       </div>
       <div class="buttons"><button id="start">Start game</button><button id="pause">Pause</button><button id="reset">Reset</button></div>
       <div class="touch"><button id="up">▲ Move up</button><button id="down">▼ Move down</button></div>
-      <div class="help">Keyboard: W / S or ↑ / ↓ · First to 7 wins · Click the game to focus it</div>
+      <div class="help">Mouse: move over the game · Keyboard: W / S or ↑ / ↓ · First to 7 wins</div>
     </main>
     <script>
       const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
       const player = { x: 24, y: H / 2 - 38, w: 10, h: 76, speed: 6 }, cpu = { x: W - 34, y: H / 2 - 38, w: 10, h: 76, speed: 3.7 }, ball = { x: W / 2, y: H / 2, r: 7, vx: 4.2, vy: 2.2 };
-      let playerScore = 0, cpuScore = 0, running = false, paused = false, upPressed = false, downPressed = false, lastTime = 0;
+      let playerScore = 0, cpuScore = 0, running = false, paused = false, upPressed = false, downPressed = false, mouseY = null, lastTime = 0;
       const $ = (id) => document.getElementById(id);
       function resetBall(direction) { ball.x = W / 2; ball.y = H / 2; ball.vx = direction * 4.2; ball.vy = 4.2 * (Math.random() * 0.9 - 0.45); }
       function resetGame() { playerScore = 0; cpuScore = 0; running = false; paused = false; player.y = cpu.y = H / 2 - 38; resetBall(Math.random() > .5 ? 1 : -1); updateHud(); draw(); }
@@ -46,7 +46,9 @@ components.html(
       function hit(p) { return ball.x - ball.r < p.x + p.w && ball.x + ball.r > p.x && ball.y - ball.r < p.y + p.h && ball.y + ball.r > p.y; }
       function update(dt) {
         const factor = Math.min(dt / 16.67, 2);
-        if (upPressed) movePaddle(player, -player.speed * factor); if (downPressed) movePaddle(player, player.speed * factor);
+        if (upPressed) movePaddle(player, -player.speed * factor);
+        if (downPressed) movePaddle(player, player.speed * factor);
+        if (!upPressed && !downPressed && mouseY !== null) player.y = Math.max(0, Math.min(H - player.h, mouseY - player.h / 2));
         movePaddle(cpu, Math.max(-cpu.speed * factor, Math.min(cpu.speed * factor, ball.y - cpu.h / 2 - cpu.y)));
         ball.x += ball.vx * factor; ball.y += ball.vy * factor;
         if (ball.y - ball.r < 0 || ball.y + ball.r > H) { ball.vy *= -1; ball.y = Math.max(ball.r, Math.min(H - ball.r, ball.y)); }
@@ -65,11 +67,21 @@ components.html(
       $('start').onclick = startGame; $('pause').onclick = () => { if (running) { paused = !paused; updateHud(); } }; $('reset').onclick = resetGame;
       window.addEventListener('keydown', (e) => { if (['ArrowUp','ArrowDown','w','s','W','S',' '].includes(e.key)) e.preventDefault(); if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') upPressed = true; if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') downPressed = true; if (e.key === ' ') startGame(); });
       window.addEventListener('keyup', (e) => { if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') upPressed = false; if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') downPressed = false; });
-      function hold(button, setter) { button.onpointerdown = () => setter(true); button.onpointerup = button.onpointerleave = () => setter(false); }
-      hold($('up'), (v) => upPressed = v); hold($('down'), (v) => downPressed = v); canvas.onclick = () => canvas.focus(); resetGame(); requestAnimationFrame(loop);
+      function movePaddleToMouse(e) {
+        const rect = canvas.getBoundingClientRect();
+        mouseY = (e.clientY - rect.top) * (H / rect.height);
+      }
+      function hold(button, setter) {
+        button.onpointerdown = () => { mouseY = null; setter(true); };
+        button.onpointerup = button.onpointerleave = () => setter(false);
+      }
+      hold($('up'), (v) => upPressed = v); hold($('down'), (v) => downPressed = v);
+      canvas.addEventListener('mousemove', movePaddleToMouse);
+      canvas.addEventListener('pointermove', (e) => { if (!e.pointerType || e.pointerType === 'mouse') movePaddleToMouse(e); });
+      canvas.addEventListener('mouseleave', () => { mouseY = null; });
+      canvas.onclick = () => canvas.focus(); resetGame(); requestAnimationFrame(loop);
     </script>
     """,
     height=540,
     scrolling=False,
 )
-
